@@ -38,7 +38,7 @@ int main() {
     SDL_Window *window = SDL_CreateWindow("Mandelbrot Set", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Surface *surface = SDL_GetWindowSurface(window);
 
-    // Fixed region in the complex plane
+    // Initial region in the complex plane
     double xmin = -2.0, xmax = 1.0;
     double ymin = -1.2, ymax = 1.2;
 
@@ -51,6 +51,35 @@ int main() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
+            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                int mouse_x = event.button.x;
+                int mouse_y = event.button.y;
+                
+                // Convert pixel coordinates to complex plane coordinates
+                double cx = xmin + (xmax - xmin) * mouse_x / (WIDTH - 1);
+                double cy = ymin + (ymax - ymin) * mouse_y / (HEIGHT - 1);
+                
+                double zoom_factor;
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    zoom_factor = 0.5;
+                } else if (event.button.button == SDL_BUTTON_RIGHT) {
+                    zoom_factor = 2.0;
+                } else {
+                    continue;
+                }
+                
+                // Calculate new bounds
+                double width = (xmax - xmin) * zoom_factor;
+                double height = (ymax - ymin) * zoom_factor;
+                
+                xmin = cx - width / 2.0;
+                xmax = cx + width / 2.0;
+                ymin = cy - height / 2.0;
+                ymax = cy + height / 2.0;
+                
+                // Re-render
+                render_mandelbrot(surface, xmin, xmax, ymin, ymax);
+                SDL_UpdateWindowSurface(window);
             }
         }
         SDL_Delay(10);
